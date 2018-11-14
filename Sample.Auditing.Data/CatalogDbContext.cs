@@ -71,6 +71,9 @@ namespace Sample.Auditing.Data
 
                 auditModels.Add(auditEntry);
 
+                Dictionary<String, Object> oldValues = new Dictionary<string, object>();
+                Dictionary<String, Object> newValues = new Dictionary<string, object>();
+
                 foreach (var property in entry.Properties)
                 {
                     if (property.IsTemporary)
