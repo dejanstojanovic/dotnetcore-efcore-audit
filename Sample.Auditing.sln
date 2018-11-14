@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28010.2050
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Auditing.Data", "Sample.Auditing.Data\Sample.Auditing.Data.csproj", "{B089436C-6811-4012-B17F-4FF3E68845D6}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Sample.Auditing.Web.Api", "Sample.Auditing.Web.Api\Sample.Auditing.Web.Api.csproj", "{D2B4923F-BC92-4396-8D59-74634CE42035}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B089436C-6811-4012-B17F-4FF3E68845D6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B089436C-6811-4012-B17F-4FF3E68845D6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B089436C-6811-4012-B17F-4FF3E68845D6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B089436C-6811-4012-B17F-4FF3E68845D6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2B4923F-BC92-4396-8D59-74634CE42035}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2B4923F-BC92-4396-8D59-74634CE42035}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2B4923F-BC92-4396-8D59-74634CE42035}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2B4923F-BC92-4396-8D59-74634CE42035}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3D01BF06-D74F-4ED8-9E18-A14A3593803B}
+	EndGlobalSection
+EndGlobal
