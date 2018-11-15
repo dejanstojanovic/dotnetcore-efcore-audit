@@ -19,6 +19,7 @@ namespace Sample.Auditing.Data
         private readonly IHttpContextAccessor httpContextAccessor;
 
 
+
         public CatalogDbContext(DbContextOptions<CatalogDbContext> options)
          : base(options)
         {
@@ -57,15 +58,16 @@ namespace Sample.Auditing.Data
             var entitiesToTrack = ChangeTracker.Entries().Where(e => !(e.Entity is Audit) && e.State != EntityState.Detached && e.State != EntityState.Unchanged);
 
             await Audits.AddRangeAsync(
-                entitiesToTrack.Select(e => new Audit()
+                entitiesToTrack.Where(e => !e.Properties.Any(p => p.IsTemporary)).Select(e => new Audit()
                 {
                     TableName = e.Metadata.Relational().TableName,
                     Action = Enum.GetName(typeof(EntityState), e.State),
+                    DateTime = DateTime.Now.ToUniversalTime(),
                     Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
-                    KeyValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue)),
-                    NewValues = JsonConvert.SerializeObject(e.Properties.Where(p => e.State == EntityState.Added || e.State == EntityState.Modified).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue)),
-                    OldValues = JsonConvert.SerializeObject(e.Properties.Where(p => e.State == EntityState.Deleted || e.State == EntityState.Modified).ToDictionary(p => p.Metadata.Name, p => p.OriginalValue))
-                })
+                    KeyValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
+                    NewValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.IsModified && (e.State == EntityState.Added || e.State == EntityState.Modified)).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
+                    OldValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.IsModified && (e.State == EntityState.Deleted || e.State == EntityState.Modified)).ToDictionary(p => p.Metadata.Name, p => p.OriginalValue).NullIfEmpty())
+                }).ToList()
             );
 
             return entitiesToTrack.SelectMany(e => e.Properties).Where(p => p.IsTemporary);
@@ -78,13 +80,14 @@ namespace Sample.Auditing.Data
 
                 await Audits.AddRangeAsync(
                 temporatyPropertyEntries.GroupBy(p => p.EntityEntry).Select(e => new Audit()
-                    {
-                        TableName = e.Key.Metadata.Relational().TableName,
-                        Action = Enum.GetName(typeof(EntityState), e.Key.State),
-                        Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
-                        KeyValues = JsonConvert.SerializeObject(e.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue)),
-                        NewValues = JsonConvert.SerializeObject(e.Where(p => !p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue))
-                    })
+                {
+                    TableName = e.Key.Metadata.Relational().TableName,
+                    Action = Enum.GetName(typeof(EntityState), e.Key.State),
+                    DateTime = DateTime.Now.ToUniversalTime(),
+                    Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
+                    KeyValues = JsonConvert.SerializeObject(e.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
+                    NewValues = JsonConvert.SerializeObject(e.Where(p => !p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty())
+                }).ToList()
                 );
                 await SaveChangesAsync();
             }

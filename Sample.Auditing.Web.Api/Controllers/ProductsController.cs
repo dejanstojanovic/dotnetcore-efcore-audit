@@ -10,10 +10,10 @@ namespace Sample.Auditing.Web.Api.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class ValuesController : ControllerBase
+    public class ProductsController : ControllerBase
     {
         private readonly CatalogDbContext dbContext;
-        public ValuesController(CatalogDbContext dbContext)
+        public ProductsController(CatalogDbContext dbContext)
         {
             this.dbContext = dbContext;
         }
