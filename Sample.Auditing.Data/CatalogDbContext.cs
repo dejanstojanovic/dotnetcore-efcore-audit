@@ -65,8 +65,8 @@ namespace Sample.Auditing.Data
                     DateTime = DateTime.Now.ToUniversalTime(),
                     Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
                     KeyValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
-                    NewValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.IsModified && (e.State == EntityState.Added || e.State == EntityState.Modified)).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
-                    OldValues = JsonConvert.SerializeObject(e.Properties.Where(p => p.IsModified && (e.State == EntityState.Deleted || e.State == EntityState.Modified)).ToDictionary(p => p.Metadata.Name, p => p.OriginalValue).NullIfEmpty())
+                    NewValues = JsonConvert.SerializeObject(e.Properties.Where(p => e.State == EntityState.Added || e.State == EntityState.Modified).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
+                    OldValues = JsonConvert.SerializeObject(e.Properties.Where(p => e.State == EntityState.Deleted || e.State == EntityState.Modified).ToDictionary(p => p.Metadata.Name, p => p.OriginalValue).NullIfEmpty())
                 }).ToList()
             );
 
