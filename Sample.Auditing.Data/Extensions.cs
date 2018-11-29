@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Sample.Auditing.Data
@@ -12,6 +13,15 @@ namespace Sample.Auditing.Data
                 return null;
             }
             return dictionary;
+        }
+
+        public static IEnumerable<T> ForEach<T>(this IEnumerable<T> source, Action<T> action)
+        {
+            foreach (T element in source)
+            {
+                action(element);
+            }
+            return source;
         }
     }
 }

@@ -45,14 +45,14 @@ namespace Sample.Auditing.Data
 
         public override async Task<int> SaveChangesAsync(bool acceptAllChangesOnSuccess, CancellationToken cancellationToken = default(CancellationToken))
         {
-            var temoraryAuditProperies = await AuditNonTemporaryProperties();
+            var temoraryAuditEntities = await AuditNonTemporaryProperties();
             var result = await base.SaveChangesAsync(acceptAllChangesOnSuccess, cancellationToken);
-            await AuditTemporaryProperties(temoraryAuditProperies);
+            await AuditTemporaryProperties(temoraryAuditEntities);
             return result;
         }
 
 
-        async Task<IEnumerable<PropertyEntry>> AuditNonTemporaryProperties()
+        async Task<IEnumerable<Tuple<EntityEntry, Audit>>> AuditNonTemporaryProperties()
         {
             ChangeTracker.DetectChanges();
             var entitiesToTrack = ChangeTracker.Entries().Where(e => !(e.Entity is Audit) && e.State != EntityState.Detached && e.State != EntityState.Unchanged);
@@ -70,24 +70,28 @@ namespace Sample.Auditing.Data
                 }).ToList()
             );
 
-            return entitiesToTrack.SelectMany(e => e.Properties).Where(p => p.IsTemporary);
+            //Return list of pairs of EntityEntry and ToolAudit
+            return entitiesToTrack.Where(e => e.Properties.Any(p => p.IsTemporary))
+                 .Select(e => new Tuple<EntityEntry, Audit>(
+                     e,
+                 new Audit()
+                 {
+                     TableName = e.Metadata.Relational().TableName,
+                     Action = Enum.GetName(typeof(EntityState), e.State),
+                     DateTime = DateTime.Now.ToUniversalTime(),
+                     Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
+                     NewValues = JsonConvert.SerializeObject(e.Properties.Where(p => !p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty())
+                 }
+                 )).ToList();
         }
 
-        async Task AuditTemporaryProperties(IEnumerable<PropertyEntry> temporatyPropertyEntries)
+        async Task AuditTemporaryProperties(IEnumerable<Tuple<EntityEntry, Audit>> temporatyEntities)
         {
-            if (temporatyPropertyEntries != null && temporatyPropertyEntries.Any())
+            if (temporatyEntities != null && temporatyEntities.Any())
             {
-
                 await Audits.AddRangeAsync(
-                temporatyPropertyEntries.GroupBy(p => p.EntityEntry).Select(e => new Audit()
-                {
-                    TableName = e.Key.Metadata.Relational().TableName,
-                    Action = Enum.GetName(typeof(EntityState), e.Key.State),
-                    DateTime = DateTime.Now.ToUniversalTime(),
-                    Username = this.httpContextAccessor?.HttpContext?.User?.Identity?.Name,
-                    KeyValues = JsonConvert.SerializeObject(e.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()),
-                    NewValues = JsonConvert.SerializeObject(e.Where(p => !p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty())
-                }).ToList()
+                temporatyEntities.ForEach(t => t.Item2.KeyValues = JsonConvert.SerializeObject(t.Item1.Properties.Where(p => p.Metadata.IsPrimaryKey()).ToDictionary(p => p.Metadata.Name, p => p.CurrentValue).NullIfEmpty()))
+                    .Select(t => t.Item2)
                 );
                 await SaveChangesAsync();
             }
