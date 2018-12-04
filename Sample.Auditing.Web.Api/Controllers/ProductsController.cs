@@ -40,7 +40,14 @@ namespace Sample.Auditing.Web.Api.Controllers
         [HttpPut("{id}")]
         public async Task Put(Guid id, [FromBody] Product value)
         {
-            dbContext.Update(value);
+            var product = dbContext.Products.Single(p => p.Id == id);
+
+            //Map exisiting product with new values (idealy with Automapper)
+            product.Name = value.Name;
+            product.Price = value.Price;
+            product.Description = value.Description;
+
+            dbContext.Update(product);
             await dbContext.SaveChangesAsync();
         }
 
